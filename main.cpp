@@ -116,6 +116,29 @@ public:
 		return Segment(farthestPoint1, farthestPoint2);
 	}
 
+	bool isIntersecting(Segment segment) {
+		int directions[4] = {
+			direction(p1, p2, segment.p1),
+			direction(p1, p2, segment.p2),
+			direction(segment.p1, segment.p2, p1),
+			direction(segment.p1, segment.p2, p2)
+		};
+
+		// If they cross each other
+		if(directions[0] != directions[1] && directions[2] != directions[3])
+			return true;
+
+		// If one of the points is on the segment
+		if(isPointOnSegment(segment.p1) || isPointOnSegment(segment.p2) || segment.isPointOnSegment(p1) || segment.isPointOnSegment(p2))
+			return true;
+
+		return false;
+	}
+
+	bool sharingVertices(Segment segment) {
+		return p1 == segment.p1 || p1 == segment.p2 || p2 == segment.p1 || p2 == segment.p2;
+	}
+
 	bool operator==(const Segment& segment) const {
 		return p1 == segment.p1 && p2 == segment.p2;
 	}
@@ -127,6 +150,19 @@ public:
 	friend std::ostream& operator<<(std::ostream& out, const Segment& segment) {
 		out << "{(" << segment.p1.x << ", " << segment.p1.y << "), (" << segment.p2.x << ", " << segment.p2.y << ")}";
 		return out;
+	}
+
+private:
+	int direction(Point p1, Point p2, Point p3) const {
+		double val = (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+
+		if(val > 0)
+			return 1;
+		
+		if(val < 0)
+			return -1;
+		
+		return 0;
 	}
 };
 
@@ -220,23 +256,23 @@ int main() {
 		return 0;
 	}
 
-	// Check if the shape is a polygon
+	// Check if the shape is a polygon by checking if the segments are intersecting
 
-	// Count all points
+	bool isPolygon = true;
 
-	std::map<Point, int> pointCounts;
-
-	for(Segment segment : merged) {
-		pointCounts[segment.p1]++;
-		pointCounts[segment.p2]++;
-	}
-
-	// If there are not exactly two segments for each point, it is not a polygon
-
-	for(std::pair<Point, int> pointCount : pointCounts) {
-		if(pointCount.second != 2) {
-			std::cout << OTHER << std::endl;
-			return 0;
+	for (int i = 0; i < merged.size() - 1; i++) {
+		for (int j = i + 1; j < merged.size(); j++) {
+			if(merged[i].isIntersecting(merged[j]) && !merged[i].sharingVertices(merged[j])) {
+				#ifdef DEBUG
+				std::cout << merged[i] << " and " << merged[j] << " intersect!" << std::endl;
+				#endif
+				std::cout << OTHER << std::endl;
+				return 0;
+			}
+		
+			#ifdef DEBUG
+			std::cout << merged[i] << " and " << merged[j] << " don't intersect!" << std::endl;
+			#endif
 		}
 	}
 
